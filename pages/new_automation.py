@@ -2,6 +2,7 @@ import dash
 from dash import html, dcc, callback, Input, Output, State
 from mitosheet.mito_dash.v1 import Spreadsheet, mito_callback
 import json
+from utils import get_automation_json
 
 dash.register_page(__name__)
 
@@ -61,25 +62,27 @@ CLOSE_BRACKET = '}'
 @mito_callback(
     Output('output', 'children'),
     Input('create-automation', 'n_clicks'),
-    State('spreadsheet', 'return_value'),
+    State('spreadsheet', 'mito_return_value'),
     State('automation-name', 'value'),
     State('automation-description', 'value'),
     State('hours-per-run', 'value'),
 )
-def create_automation(n_clicks, return_value, automation_name, automation_description, hours_per_run):
+def create_automation(n_clicks, mito_return_value, automation_name, automation_description, hours_per_run):
     if n_clicks is None:
         return ''
     
+    analysis = get_automation_json(
+        automation_name,
+        automation_description,
+        hours_per_run,
+        mito_return_value.code(),
+    )
+
     # Write the automation metadata to a file in /automations/{automation_name}.json
     with open(f'automations/{automation_name}.json', 'w') as f:
-        f.write(json.dumps({
-           "automation_name": automation_name,
-            "automation_description": automation_description,
-            "hours_per_run": hours_per_run,
-            "automation_code": return_value.code()
-        }))
+        f.write(analysis)
 
     return html.Div([
-        f'Automation {automation_name} created with {return_value.dfs()} rows, {automation_description}, and {hours_per_run} hours per run. Check it out at',
-        dcc.Link(html.Button("here"), href=f"/automations?automation_name={automation_name}", refresh=True),
+        f'Automation {automation_name} created with {mito_return_value.dfs()} rows, {automation_description}, and {hours_per_run} hours per run. Check it out at',
+        dcc.Link(html.Button("here"), href=f"/automation?automation_name={automation_name}", refresh=True),
     ])
