@@ -18,13 +18,24 @@ dash.register_page(__name__)
 
 
 layout = html.Div([
-    # represents the browser address bar and doesn't render anything
-    dcc.Location(id='url', refresh=False),
-    html.Div("", id='automation-metadata'),
-    Spreadsheet(id='input-data', import_folder='./data'),
-    html.Button('Run Automation', id='run-automation'),
-    html.Div(id='automation-output')
-])
+    html.Div([  # This is the container div
+        # represents the browser address bar and doesn't render anything
+        dcc.Location(id='url', refresh=False),
+        html.Div("", id='automation-metadata', style={'color': 'white', 'margin-bottom': '20px'}),
+        Spreadsheet(id='input-data', import_folder='./data'),
+        html.Button('Run Automation', id='run-automation', style={
+            'background-color': '#5A67D8',
+            'color': 'white',
+            'padding': '10px 15px',
+            'border-radius': '10px',
+            'text-decoration': 'none',
+            'display': 'inline-block',
+            'margin': '20px 0'
+        }),
+        html.Div(id='automation-output', style={'color': 'white', 'padding': '10px 0'})
+    ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
+], style={'background-color': '#2D3748', 'height': '100%', 'color': 'white', 'padding': '20px 0'})
+
 
 
 def get_function_from_code_unsafe(code: str) -> Optional[Callable]:

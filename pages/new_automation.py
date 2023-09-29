@@ -7,34 +7,42 @@ from utils import get_automation_json
 dash.register_page(__name__)
 
 layout = html.Div([
-    html.H1('Create a New Automation'),
-    # Configuration section, with a title input as well as a text input for the automation description, as well as a number input for hours per run
-    html.Div([
-        html.Div('Automation Name'),
-        dcc.Input(id='automation-name', type='text'),
-        html.Div('Automation Description'),
-        dcc.Textarea(id='automation-description'),
-        html.Div('Hours per Run'),
-        dcc.Input(id='hours-per-run', type='number'),
-    ]),
+    html.Div([  # This is the container div
+        html.H1('Create a New Automation', style={'color': 'white', 'padding': '10px 0'}),
+        # Configuration section, with a title input as well as a text input for the automation description, as well as a number input for hours per run
+        html.Div([
+            html.Div('Automation Name', style={'color': 'white', 'padding': '10px 0'}),
+            dcc.Input(id='automation-name', type='text', style={'width': '100%', 'margin': '10px 0'}),
+            html.Div('Automation Description', style={'color': 'white', 'padding': '10px 0'}),
+            dcc.Textarea(id='automation-description', style={'width': '100%', 'height': '100px', 'margin': '10px 0'}),
+            html.Div('Hours per Run', style={'color': 'white', 'padding': '10px 0'}),
+            dcc.Input(id='hours-per-run', type='number', style={'width': '100%', 'margin': '10px 0'}),
+        ], style={'margin': '20px'}),
 
+        Spreadsheet(
+            id='spreadsheet',
+            import_folder='./data',
+            code_options={
+                'as_function': True,
+                'call_function': False,
+                'function_name': 'get_data',
+                'function_params': ['file_name_export_excel', 'file_name_import_csv']
+            }
+        ),
 
-    Spreadsheet(
-        id='spreadsheet',
-        import_folder='./data',
-        code_options={
-            'as_function': True,
-            'call_function': False,
-            'function_name': 'get_data',
-            'function_params': ['file_name_export_excel', 'file_name_import_csv']
-        }
-    ),
-
-
-    # A button to finalize the automation
-    html.Button('Create Automation', id='create-automation'),
-    html.Div(id='output')
-])
+        # A button to finalize the automation
+        html.Button('Create Automation', id='create-automation', style={
+            'background-color': '#5A67D8',
+            'color': 'white',
+            'padding': '10px 15px',
+            'border-radius': '10px',
+            'text-decoration': 'none',
+            'display': 'inline-block',
+            'margin': '20px 0'
+        }),
+        html.Div(id='output', style={'color': 'white', 'padding': '10px 0'})
+    ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
+], style={'background-color': '#2D3748', 'height': '100%', 'color': 'white', 'padding': '20px 0'})
 
 AUTOMATION_PAGE_TEMPLATE = """
 
