@@ -12,7 +12,7 @@ import urllib.parse
 import pandas as pd
 import time
 
-from utils import get_automation_json
+from utils import get_automation_json, read_automation_from_file, write_automation_to_file
 
 dash.register_page(__name__)
 
@@ -24,7 +24,7 @@ layout = html.Div([
         html.Div("", id='automation-metadata', style={'color': 'white', 'margin-bottom': '20px'}),
         Spreadsheet(id='input-data', import_folder='./data'),
         html.Button('Run Automation', id='run-automation', style={
-            'background-color': '#5A67D8',
+            'background-color': '##9d6cff',
             'color': 'white',
             'padding': '10px 15px',
             'border-radius': '10px',
@@ -34,7 +34,7 @@ layout = html.Div([
         }),
         html.Div(id='automation-output', style={'color': 'white', 'padding': '10px 0'})
     ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
-], style={'background-color': '#2D3748', 'height': '100%', 'color': 'white', 'padding': '20px 0'})
+], style={'height': '100%', 'color': 'white'})
 
 
 
@@ -61,20 +61,20 @@ def get_function_from_code_unsafe(code: str) -> Optional[Callable]:
     raise ValueError(f'No functions defined in code: {code}')
 
 
-def get_automation_metadata(automation_data):
+def get_automation_metadata(automation):
 
-    num_runs = len(automation_data['runs'])
-    hours_saved = num_runs * automation_data['hours_per_run']
+    num_runs = len(automation['runs'])
+    hours_saved = num_runs * automation['hours_per_run']
 
     header_and_description = html.Div([
-        html.H1("Automation: " + automation_data['automation_name']),
-        html.Div("Description", automation_data['automation_description']),
+        html.H1("Automation: " + automation['automation_name']),
+        html.Div("Description", automation['automation_description']),
         html.Div(f'This automation has been run {num_runs} times, and has saved {hours_saved} hours'),
     ])
 
     # Then, from the code, we get the number of inputs and outputs 
     # (we need a way to read it nicely from a file). It would be really useful to have some Mito interface functions for dealing with generated code...
-    code_string = automation_data['automation_code']
+    code_string = automation['automation_code']
     function = get_function_from_code_unsafe(code_string)
 
     # Get the argument names from the function
@@ -102,21 +102,18 @@ def run_automation(n_clicks, search, return_value):
         ])
     
     automation_name = search['automation_name'][0]
-
+    automation = read_automation_from_file(automation_name)
+    
     # If the file doesn't exist, display an error page
-    if not os.path.exists(f'automations/{automation_name}.json'):
+    if automation is None:
         return html.Div([
             html.H3(f'Automation {automation_name} does not exist'),
             html.A('Go back to the main page', href='/')
         ])
-
-    # Read in this from the automations folder
-    with open(f'automations/{automation_name}.json') as f:
-        automation_data = json.loads(f.read())
-
+   
     
     # Get the function
-    code_string = automation_data['automation_code']
+    code_string = automation['automation_code']
     function = get_function_from_code_unsafe(code_string)
 
     # Get the argument names from the function
@@ -140,16 +137,18 @@ def run_automation(n_clicks, search, return_value):
 
         result = function(*file_names)
 
-        new_automation_json = get_automation_json(
-            automation_name,
-            automation_data['automation_description'],
-            automation_data['hours_per_run'],
-            automation_data['automation_code'],
-            automation_data['runs'] + [time.time()]
+        # Remove all file paths
+        for file_name in file_names:
+            os.remove(file_name)
+
+        write_automation_to_file(
+            automation['automation_name'],
+            automation['automation_description'],
+            automation['hours_per_run'],
+            automation['automation_code'],
+            automation['runs'] + [time.time()],
+            overwrite=True
         )
-        # Write the automation metadata to a file in /automations/{automation_name}.json
-        with open(f'automations/{automation_name}.json', 'w') as f:
-            f.write(new_automation_json)
 
         return html.Div([
             html.H3('Result'),
@@ -171,16 +170,13 @@ def display_page(search):
         ])
     
     automation_name = search['automation_name'][0]
+    automation = read_automation_from_file(automation_name)
 
     # If the file doesn't exist, display an error page
-    if not os.path.exists(f'automations/{automation_name}.json'):
+    if automation is None:
         return html.Div([
             html.H3(f'Automation {automation_name} does not exist'),
             html.A('Go back to the main page', href='/')
         ])
 
-    # Read in this from the automations folder
-    with open(f'automations/{automation_name}.json') as f:
-        automation_data = json.loads(f.read())
-
-    return get_automation_metadata(automation_data)
+    return get_automation_metadata(automation)

@@ -1,23 +1,27 @@
-import dash
-from dash import html, dcc, callback, Input, Output, State
-from mitosheet.mito_dash.v1 import Spreadsheet, mito_callback
 import json
-from utils import get_automation_json
+import os
+
+import dash
+from dash import Input, Output, State, callback, dcc, html
+from mitosheet.mito_dash.v1 import Spreadsheet, mito_callback
+
+from utils import get_automation_json, get_file_name_from_automation_name, write_automation_to_file
 
 dash.register_page(__name__)
 
 layout = html.Div([
     html.Div([  # This is the container div
-        html.H1('Create a New Automation', style={'color': 'white', 'padding': '10px 0'}),
+        html.H1('Create a New Automation', style={'color': 'white', 'padding': '0'}),
+        html.Div('To create a new analysis, first enter the name of the analysis, as well as a description. Then, use the Mito spreadsheet to create the analysis as you would in Excel. Finally, click the "Save Automation" button to save the automation.', style={'color': 'white', 'padding-bottom': '20px'}),
         # Configuration section, with a title input as well as a text input for the automation description, as well as a number input for hours per run
         html.Div([
-            html.Div('Automation Name', style={'color': 'white', 'padding': '10px 0'}),
-            dcc.Input(id='automation-name', type='text', style={'width': '100%', 'margin': '10px 0'}),
-            html.Div('Automation Description', style={'color': 'white', 'padding': '10px 0'}),
-            dcc.Textarea(id='automation-description', style={'width': '100%', 'height': '100px', 'margin': '10px 0'}),
-            html.Div('Hours per Run', style={'color': 'white', 'padding': '10px 0'}),
-            dcc.Input(id='hours-per-run', type='number', style={'width': '100%', 'margin': '10px 0'}),
-        ], style={'margin': '20px'}),
+            html.Div('Automation Name', style={'color': 'white', 'padding-top': '10px', 'font-size': '20px'}),
+            dcc.Input(id='automation-name', type='text', style={'width': '100%', 'margin-top': '5px'}, placeholder='Calculate Monthly Returns'),
+            html.Div('Automation Description', style={'color': 'white', 'padding-top': '10px', 'font-size': '20px'}),
+            dcc.Textarea(id='automation-description', style={'width': '100%', 'height': '100px', 'margin-top': '5px'}, placeholder='Calculates monthly returns for all portfolios, and then saves the results to a file. The result is a formatted excel file.'),
+            html.Div('Hours per Run', style={'color': 'white', 'padding-top': '10px', 'font-size': '20px'}),
+            dcc.Input(id='hours-per-run', type='number', style={'width': '100%', 'margin-top': '5px'}, placeholder='3'),
+        ], style={'margin-bottom': '20px'}),
 
         Spreadsheet(
             id='spreadsheet',
@@ -31,18 +35,18 @@ layout = html.Div([
         ),
 
         # A button to finalize the automation
-        html.Button('Create Automation', id='create-automation', style={
-            'background-color': '#5A67D8',
+        html.Button('Save Automation', id='create-automation', style={
+            'background-color': '#9d6cff',
             'color': 'white',
             'padding': '10px 15px',
             'border-radius': '10px',
             'text-decoration': 'none',
             'display': 'inline-block',
-            'margin': '20px 0'
+            'margin': '10px 0'
         }),
         html.Div(id='output', style={'color': 'white', 'padding': '10px 0'})
-    ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
-], style={'background-color': '#2D3748', 'height': '100%', 'color': 'white', 'padding': '20px 0'})
+    ], style={'max-width': '1200px', 'margin': 'auto'})  # This style ensures the content is centered and has a max width
+], style={'height': '100%', 'color': 'white'})
 
 AUTOMATION_PAGE_TEMPLATE = """
 
@@ -79,6 +83,16 @@ def create_automation(n_clicks, mito_return_value, automation_name, automation_d
     if n_clicks is None:
         return ''
     
+    if automation_name is None or automation_name == '':
+        return html.Div(['Please enter an automation name above.'], style={'color': 'red'})
+    
+    if automation_description is None or automation_description == '':
+        return html.Div(['Please enter an automation description above.'], style={'color': 'red'})
+    
+    if hours_per_run is None or hours_per_run == '':
+        return 
+    
+
     analysis = get_automation_json(
         automation_name,
         automation_description,
@@ -86,11 +100,21 @@ def create_automation(n_clicks, mito_return_value, automation_name, automation_d
         mito_return_value.code(),
     )
 
-    # Write the automation metadata to a file in /automations/{automation_name}.json
-    with open(f'automations/{automation_name}.json', 'w') as f:
-        f.write(analysis)
+    wrote = write_automation_to_file(automation_name, automation_description, hours_per_run, mito_return_value.code())
+    if not wrote:
+        return html.Div([f'An automation with the name {automation_name} already exists'], style={'color': 'red'})
 
     return html.Div([
-        f'Automation {automation_name} created with {mito_return_value.dfs()} rows, {automation_description}, and {hours_per_run} hours per run. Check it out at',
-        dcc.Link(html.Button("here"), href=f"/automation?automation_name={automation_name}", refresh=True),
+        dcc.Link(html.Button(
+            f"{automation_name} successfully created. Click to see"), href=f"/automation?automation_name={automation_name}", refresh=True,
+            style={
+                'background-color': '#9d6cff',
+                'color': 'white',
+                'padding': '10px 15px',
+                'border-radius': '10px',
+                'text-decoration': 'none',
+                'display': 'inline-block',
+                'margin': '20px 0'
+            }
+        ),
     ])

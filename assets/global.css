@@ -1,0 +1,16 @@
+
+
+body { 
+    margin: 0; 
+    padding: 20px 0px;
+    background-color: #2d2d2d;
+}
+
+* {
+    font-family: Roboto;
+}
+
+a {
+    text-decoration: none;
+    color: #9d6cff;
+}
