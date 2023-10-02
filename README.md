@@ -2,6 +2,28 @@
 
 [Watch the demo](https://www.loom.com/share/283d65b5c1f9444b8243ea29183a1778)
 
+### Run Locally 
+1. Create a virtual environment:
+```
+python3 -m venv venv
+```
+
+2. Start the virtual environment:
+```
+source venv/bin/activate
+```
+
+3. Install the required python packages:
+```
+pip install -r requirements.txt
+```
+
+4. Start the streamlit app
+```
+python main.py
+```
+
+
 ## Demo Instructions
 1. Import `fund_info.csv`
 2. Use custom imports to import fund performance.
