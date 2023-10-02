@@ -18,7 +18,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Start the streamlit app
+4. Start the dash app
 ```
 python main.py
 ```
