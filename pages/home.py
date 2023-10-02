@@ -28,14 +28,13 @@ layout = html.Div([
             [
                 html.Li(
                     [
-                        # TODO: style this
                         html.A([
-                            html.H3(automation['automation_name'], style={'color': 'white', 'margin': '0'}),
+                            html.H3(automation['automation_name'], style={'color': 'white', 'margin-top': '0px', 'margin-bottom': '5px'}),
                             html.Div(automation['automation_description'], style={'color': 'white', 'margin': '0'})
                         ], href=f"/automation?automation_name={automation['automation_name']}")
                     ],
-                    style={'color': 'white', 'padding': '5px 0'}
-                ) for automation in get_all_automations()
+                    style={'color': 'white', 'padding': '10px', 'background-color': '#363637', 'border-radius': '10px', 'margin': '10px 0'}
+                ) for automation in get_all_automations(5)
             ],
             style={'list-style-type': 'none', 'padding': '0'}
         ),

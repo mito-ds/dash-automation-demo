@@ -45,7 +45,7 @@ layout = html.Div([
             'margin': '10px 0'
         }),
         html.Div(id='output', style={'color': 'white', 'padding': '10px 0'})
-    ], style={'max-width': '1200px', 'margin': 'auto'})  # This style ensures the content is centered and has a max width
+    ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
 ], style={'height': '100%', 'color': 'white'})
 
 AUTOMATION_PAGE_TEMPLATE = """

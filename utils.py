@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 def get_automation_json(
         analysis_name,
@@ -46,11 +47,12 @@ def write_automation_to_file(automation_name, automation_description, hours_per_
         f.write(get_automation_json(automation_name, automation_description, hours_per_run, code_string, num_runs))
         return True
 
-def get_all_automations():
+def get_all_automations(max_num_automations=sys.maxsize):
     """
     A generator that yields all of the automations in the automations folder, that are in the format {automation_name}.json
     and have a valid json format from above
     """
+    num_automations = 0
     for automation in os.listdir('automations'):
         if automation.endswith('.json'):
             with open(f'automations/{automation}') as f:
@@ -67,5 +69,9 @@ def get_all_automations():
                     continue
                 if 'runs' not in automation_data or not isinstance(automation_data['runs'], list):
                     continue
-
+                
+                num_automations += 1
                 yield automation_data
+
+                if num_automations >= max_num_automations:
+                    break
