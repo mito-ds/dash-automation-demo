@@ -19,8 +19,8 @@ def get_total_time_saved_data():
 
     return html.Div([
         html.Div([f'{num_automations} Automations'], style={'font-weight': 'bold', 'color': 'white', 'background-color': '#9d6cff', 'padding': '10px', 'border-radius': '10px'}),
-        html.Div([f'{num_runs} Runs'], style={'font-weight': 'bold', 'color': 'white', 'background-color': '#E53E3E', 'padding': '10px', 'border-radius': '10px'}),
-        html.Div([f'{total_time_saved} Hours Saved'], style={'font-weight': 'bold', 'color': 'white', 'background-color': '#38A169', 'padding': '10px', 'border-radius': '10px'}),
+        html.Div([f'{num_runs} Runs'], style={'font-weight': 'bold', 'color': 'white', 'background-color': '#9d6cff', 'padding': '10px', 'border-radius': '10px'}),
+        html.Div([f'{total_time_saved} Hours Saved'], style={'font-weight': 'bold', 'color': 'white', 'background-color': '#9d6cff', 'padding': '10px', 'border-radius': '10px'}),
     ], style={'display': 'grid', 'grid-template-columns': 'repeat(3, 1fr)', 'gap': '10px', 'padding': '20px', })
 
 

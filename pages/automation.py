@@ -13,6 +13,7 @@ import pandas as pd
 import time
 
 from utils import get_automation_json, read_automation_from_file, write_automation_to_file
+from styles import button_style
 
 dash.register_page(__name__)
 
@@ -23,15 +24,7 @@ layout = html.Div([
         dcc.Location(id='url', refresh=False),
         html.Div("", id='automation-metadata', style={'color': 'white', 'margin-bottom': '20px'}),
         Spreadsheet(id='input-data', import_folder='./data'),
-        html.Button('Run Automation', id='run-automation', style={
-            'background-color': '##9d6cff',
-            'color': 'white',
-            'padding': '10px 15px',
-            'border-radius': '10px',
-            'text-decoration': 'none',
-            'display': 'inline-block',
-            'margin': '20px 0'
-        }),
+        html.Button('Run Automation', id='run-automation', style=button_style),
         html.Div(id='automation-output', style={'color': 'white', 'padding': '10px 0'})
     ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
 ], style={'height': '100%', 'color': 'white'})

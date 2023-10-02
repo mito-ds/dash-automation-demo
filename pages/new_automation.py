@@ -6,6 +6,7 @@ from dash import Input, Output, State, callback, dcc, html
 from mitosheet.mito_dash.v1 import Spreadsheet, mito_callback
 
 from utils import get_automation_json, get_file_name_from_automation_name, write_automation_to_file
+from styles import button_style, success_button_style, input_style, text_area_style
 
 dash.register_page(__name__)
 
@@ -15,12 +16,12 @@ layout = html.Div([
         html.Div('To create a new analysis, first enter the name of the analysis, as well as a description. Then, use the Mito spreadsheet to create the analysis as you would in Excel. Finally, click the "Save Automation" button to save the automation.', style={'color': 'white', 'padding-bottom': '20px'}),
         # Configuration section, with a title input as well as a text input for the automation description, as well as a number input for hours per run
         html.Div([
-            html.Div('Automation Name', style={'color': 'white', 'padding-top': '10px', 'font-size': '20px'}),
-            dcc.Input(id='automation-name', type='text', style={'width': '100%', 'margin-top': '5px'}, placeholder='Calculate Monthly Returns'),
-            html.Div('Automation Description', style={'color': 'white', 'padding-top': '10px', 'font-size': '20px'}),
-            dcc.Textarea(id='automation-description', style={'width': '100%', 'height': '100px', 'margin-top': '5px'}, placeholder='Calculates monthly returns for all portfolios, and then saves the results to a file. The result is a formatted excel file.'),
-            html.Div('Hours per Run', style={'color': 'white', 'padding-top': '10px', 'font-size': '20px'}),
-            dcc.Input(id='hours-per-run', type='number', style={'width': '100%', 'margin-top': '5px'}, placeholder='3'),
+            html.Div('Automation Name: ', style={'color': 'white', 'padding-top': '10px', 'font-size': '20px'}),
+            dcc.Input(id='automation-name', type='text', style=input_style, placeholder='Calculate Monthly Returns'),
+            html.Div('Automation Description: ', style={'color': 'white', 'padding-top': '10px', 'font-size': '20px'}),
+            dcc.Textarea(id='automation-description', style=text_area_style, placeholder='Calculates monthly returns for all portfolios, and then saves the results to a file. The result is a formatted excel file.'),
+            html.Div('Hours per Run:', style={'color': 'white', 'padding-top': '10px', 'font-size': '20px', }),
+            dcc.Input(id='hours-per-run', type='number', style=input_style, placeholder='3'),
         ], style={'margin-bottom': '20px'}),
 
         Spreadsheet(
@@ -35,15 +36,7 @@ layout = html.Div([
         ),
 
         # A button to finalize the automation
-        html.Button('Save Automation', id='create-automation', style={
-            'background-color': '#9d6cff',
-            'color': 'white',
-            'padding': '10px 15px',
-            'border-radius': '10px',
-            'text-decoration': 'none',
-            'display': 'inline-block',
-            'margin': '10px 0'
-        }),
+        html.Button('Save Automation', id='create-automation', style=button_style),
         html.Div(id='output', style={'color': 'white', 'padding': '10px 0'})
     ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
 ], style={'height': '100%', 'color': 'white'})
@@ -106,15 +99,8 @@ def create_automation(n_clicks, mito_return_value, automation_name, automation_d
 
     return html.Div([
         dcc.Link(html.Button(
-            f"{automation_name} successfully created. Click to see"), href=f"/automation?automation_name={automation_name}", refresh=True,
-            style={
-                'background-color': '#9d6cff',
-                'color': 'white',
-                'padding': '10px 15px',
-                'border-radius': '10px',
-                'text-decoration': 'none',
-                'display': 'inline-block',
-                'margin': '20px 0'
-            }
+            f"{automation_name} successfully created. Click to see", style=success_button_style), 
+            href=f"/automation?automation_name={automation_name}", 
+            refresh=True,
         ),
     ])
