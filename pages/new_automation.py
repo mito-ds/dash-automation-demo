@@ -32,6 +32,12 @@ layout = html.Div([
                 'call_function': False,
                 'function_name': 'get_data',
                 'function_params': ['file_name_export_excel', 'file_name_import_csv']
+            },
+            theme={
+                "primaryColor": "#9D6CFF",
+                "backgroundColor": "#363636",
+                "secondaryBackgroundColor": "#494650",
+                "textColor": "#FFFFFF"
             }
         ),
 
@@ -40,23 +46,6 @@ layout = html.Div([
         html.Div(id='output', style={'color': 'white', 'padding': '10px 0'})
     ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
 ], style={'height': '100%', 'color': 'white'})
-
-AUTOMATION_PAGE_TEMPLATE = """
-
-import dash
-from dash import html
-
-dash.register_page(__name__)
-
-layout = html.Div([
-    html.H1('{automation_name}'),
-    html.Div('{automation_description}'),
-    html.Div('This automations saves {hours_per_run} hours per run'),
-
-    # Then, we display the spreadsheet component with the data (we need a way to save it to a file)
-])
-
-"""
 
 OPEN_BRACKET = '{'
 CLOSE_BRACKET = '}'
@@ -67,7 +56,7 @@ CLOSE_BRACKET = '}'
 @mito_callback(
     Output('output', 'children'),
     Input('create-automation', 'n_clicks'),
-    State('spreadsheet', 'mito_return_value'),
+    State('spreadsheet', 'spreadsheet_result'),
     State('automation-name', 'value'),
     State('automation-description', 'value'),
     State('hours-per-run', 'value'),

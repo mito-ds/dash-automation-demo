@@ -1,6 +1,7 @@
 
 
 
+import base64
 import inspect
 import json
 import os
@@ -11,6 +12,7 @@ from mitosheet.mito_dash.v1 import Spreadsheet, mito_callback
 import urllib.parse
 import pandas as pd
 import time
+from mitosheet.public.v3 import *
 
 from utils import get_automation_json, read_automation_from_file, write_automation_to_file
 from styles import button_style
@@ -25,7 +27,7 @@ layout = html.Div([
         html.Div("", id='automation-metadata', style={'color': 'white', 'margin-bottom': '20px'}),
         Spreadsheet(id='input-data', import_folder='./data'),
         html.Button('Run Automation', id='run-automation', style=button_style),
-        html.Div(id='automation-output', style={'color': 'white', 'padding': '10px 0'})
+        dcc.Download(id="download-dataframe-csv"),
     ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
 ], style={'height': '100%', 'color': 'white'})
 
@@ -73,15 +75,19 @@ def get_automation_metadata(automation):
     # Get the argument names from the function
     argument_names = list(inspect.signature(function).parameters.keys()) if function is not None else []
 
+    # Tell them how many arguments there are
+
     # Then, allow users to configure two new dataframes
     return html.Div([
         header_and_description,
+        html.H2('Configure Inputs', style={'color': 'white', 'padding': '10px 0'}),
+        html.Div(f'Please use the Mito spreadsheet to configure the {len(argument_names)} argument{"s" if len(argument_names) > 2 else ""} for this automation'),
     ])
 
 @mito_callback(
-    Output('automation-output', 'children'), 
+    Output('download-dataframe-csv', 'data'), 
     Input('run-automation', 'n_clicks'), State('url', 'search'), 
-    State('input-data', 'mito_return_value'), prevent_initial_call=True
+    State('input-data', 'spreadsheet_result'), prevent_initial_call=True
 )
 def run_automation(n_clicks, search, return_value):
     # Prase the search params
@@ -143,12 +149,9 @@ def run_automation(n_clicks, search, return_value):
             overwrite=True
         )
 
-        return html.Div([
-            html.H3('Result'),
-            html.Div(str(result.columns))
-        ])
-    
+        df = result[-1]
 
+        return dcc.send_data_frame(df.to_csv, "mydf.csv")
 
 
 @callback(Output('automation-metadata', 'children'), Input('url', 'search'))
@@ -173,3 +176,4 @@ def display_page(search):
         ])
 
     return get_automation_metadata(automation)
+
