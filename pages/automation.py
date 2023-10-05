@@ -15,7 +15,7 @@ import time
 from mitosheet.public.v3 import *
 
 from utils import get_automation_json, read_automation_from_file, write_automation_to_file
-from styles import button_style
+from styles import button_style, disabled_button_style
 
 dash.register_page(__name__)
 
@@ -24,9 +24,18 @@ layout = html.Div([
     html.Div([  # This is the container div
         # represents the browser address bar and doesn't render anything
         dcc.Location(id='url', refresh=False),
-        html.Div("", id='automation-metadata', style={'color': 'white', 'margin-bottom': '20px'}),
-        Spreadsheet(id='input-data', import_folder='./data'),
-        html.Button('Run Automation', id='run-automation', style=button_style),
+        html.Div("", id='automation-metadata', style={'color': 'white', 'margin-bottom': '10px'}),
+        html.Div("", id='automation-num-uploads', style={'color': 'white', 'margin-bottom': '20px'}),
+        Spreadsheet(
+            id='input-data', 
+            import_folder='./data',
+            theme={
+                "primaryColor": "#9D6CFF",
+                "backgroundColor": "#363636",
+                "secondaryBackgroundColor": "#494650",
+                "textColor": "#FFFFFF"
+            }),
+        html.Button('Run Automation', id='run-automation', style=disabled_button_style),
         dcc.Download(id="download-dataframe-csv"),
     ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
 ], style={'height': '100%', 'color': 'white'})
@@ -63,7 +72,7 @@ def get_automation_metadata(automation):
 
     header_and_description = html.Div([
         html.H1("Automation: " + automation['automation_name']),
-        html.Div("Description", automation['automation_description']),
+        html.Div("Description: " + automation['automation_description']),
         html.Div(f'This automation has been run {num_runs} times, and has saved {hours_saved} hours'),
     ])
 
@@ -81,7 +90,6 @@ def get_automation_metadata(automation):
     return html.Div([
         header_and_description,
         html.H2('Configure Inputs', style={'color': 'white', 'padding': '10px 0'}),
-        html.Div(f'Please use the Mito spreadsheet to configure the {len(argument_names)} argument{"s" if len(argument_names) > 2 else ""} for this automation'),
     ])
 
 @mito_callback(
@@ -152,6 +160,46 @@ def run_automation(n_clicks, search, return_value):
         df = result[-1]
 
         return dcc.send_data_frame(df.to_csv, "mydf.csv")
+
+
+@mito_callback(
+        Output('automation-num-uploads', 'children'), 
+        Output('run-automation', 'style'),
+        Input('url', 'search'), Input('input-data', 'spreadsheet_result')
+)
+def display_number_of_uploads_remaining(search, spreadsheet_result):
+    # Prase the search params
+    search = urllib.parse.parse_qs(search[1:])
+
+    if 'automation_name' not in search:
+        return ''
+    
+    automation_name = search['automation_name'][0]
+    automation = read_automation_from_file(automation_name)
+
+    # If the file doesn't exist, display an error page
+    if automation is None:
+        return ''
+    
+    # Then, from the code, we get the number of inputs and outputs 
+    # (we need a way to read it nicely from a file). It would be really useful to have some Mito interface functions for dealing with generated code...
+    code_string = automation['automation_code']
+    function = get_function_from_code_unsafe(code_string)
+
+    # Get the argument names from the function
+    argument_names = list(inspect.signature(function).parameters.keys()) if function is not None else []
+    
+    num_dfs = len(spreadsheet_result.dfs()) if spreadsheet_result is not None else 0
+
+    # Return colored text based on the number of arguments
+    if num_dfs == len(argument_names):
+        return html.Div(f'You have uploaded {num_dfs} of {len(argument_names)} required arguments', style={'color': 'green'}), button_style
+    
+    if num_dfs > len(argument_names):
+        return html.Div(f'You have uploaded {num_dfs} of {len(argument_names)} required arguments', style={'color': 'red'}), disabled_button_style
+    
+    if num_dfs < len(argument_names):
+        return html.Div(f'You have uploaded {num_dfs} of {len(argument_names)} required arguments', style={'color': 'orange'}), disabled_button_style
 
 
 @callback(Output('automation-metadata', 'children'), Input('url', 'search'))

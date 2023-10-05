@@ -12,6 +12,7 @@ button_style={
 }
 
 success_button_style = {**button_style, 'background-color': '#287d2c'}
+disabled_button_style = {**button_style, 'background-color': '#494650'}
 
 input_style = {
     'width': '100%', 
