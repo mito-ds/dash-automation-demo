@@ -18,10 +18,10 @@ layout = html.Div([
             'To see a demo of this application in action, watch the video below: (coming soon)',
             style={'color': 'white', 'padding': '10px 0'}
         ),
-        html.Iframe(
-            src="https://www.youtube.com/embed/7qHMXu99d88",
-            style={"height": "500px", "width": "100%", "border": "none", "border-radius": "10px", "margin": "20px 0"}
-        ),
+        #html.Iframe(
+        #    src="https://www.youtube.com/embed/7qHMXu99d88",
+        #    style={"height": "500px", "width": "100%", "border": "none", "border-radius": "10px", "margin": "20px 0"}
+        #),
         html.H2('Re-run Existing Automations' if len(list(get_all_automations(1))) > 0 else '', style={'color': 'white', 'padding': '10px 0'}),
         # A list of all the automations in the automations folder
         html.Div(id='automation-list'),

@@ -23,3 +23,8 @@ input_style = {
 }
 
 text_area_style = {**input_style, 'height': '100px'}
+
+mito_theme = {
+    'backgroundColor': '#2d2d2d',
+    'textColor': 'white'
+}

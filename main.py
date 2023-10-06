@@ -4,8 +4,10 @@ import os
 import json
 from utils import get_all_automations
 
-app = Dash(__name__, use_pages=True, external_scripts=['./static/global.css'])
+if not os.path.exists('automations'):
+    os.mkdir('automations')
 
+app = Dash(__name__, use_pages=True, external_scripts=['./static/global.css'])
 
 def get_total_time_saved_data():
     num_automations = 0

@@ -1,48 +1,34 @@
-# vanguard-performance-demo
+# Mito Automation With Dash
 
-[Watch the demo](https://www.loom.com/share/283d65b5c1f9444b8243ea29183a1778)
+This demo application shows how Mito can be used to automate spreadsheet processes. Namely, users of this Spreadsheet Automation Hub can:
+1. Create a new Python automations by simply editing the Mito spreadsheet
+2. Run these automations on new datasets
 
-### Run Locally 
-1. Create a virtual environment:
-```
-python3 -m venv venv
-```
+## How to Run
 
-2. Start the virtual environment:
+First, install dependencies:
 ```
-source venv/bin/activate
-```
-
-3. Install the required python packages:
-```
+python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mitosheet --upgrade
 pip install -r requirements.txt
 ```
 
-4. Start the dash app
+Run the application with:
 ```
 python main.py
 ```
 
+## How to Use
 
-## Demo Instructions
-1. Import `fund_info.csv`
-2. Use custom imports to import fund performance.
-   - Use a fake username and password.
-   - Use the year 2022
-4. Use `Vlookup` to add the `Fund Manager` to the `fund_info` dataframe
-5. Use the `MonthName` formula to extract the month from the date in `fund_info`
-6. Create a pivot tale
-   - Rows: `Fund`, `Fund Manager`
-   - Columns: `Month`
-   - Values: `sum` of `MoM Return`
-7. Add conditional formatting
-   - <0, highlight in red
-   - \>0, highlight in green
-8. Generate Excel file
-9. Open Excel file and show formatting
+### Creating a new automation
 
-Take a break to talk about what we just did. Paint the scenario that since your manager found this report useful, they want to see the same report for historical data. 
+1. Click the `Create New Automation` button at the bottom of the main page. 
+2. Configure the new automation wizard with the name, description, and timing of this automation. 
+3. Use the Mito spreadsheet to create an automation. Import data, make edits, create your final dataset. **The final sheet tab in the Mito spreadsheet is taken as the result of the analysis**.
+4. Click `Save Automation` to be able to run these edits on new data.
 
-1. Click on change imported data and update the `performance` data to look at 2021. Notice that the colors change dramatically
-2. Redownload the Excel file
-3. Highlight how quick it is to create this report now. 
+### Using an automation on new data
+
+Now, you're ready to use the automation you created above on a new dataset:
+1. Click on the `Click Here` button that appears on the New Automation page post save to navigate to your new automation.
+2. See the automation name, description, and other metadata, and then use the Mito spradsheet to upload the new versions of your input datasets.
+3. Click `Run Automation` to run your edits on these new datasets. Mito will automatically download a CSV of your final file.

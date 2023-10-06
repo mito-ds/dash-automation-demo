@@ -15,7 +15,7 @@ import time
 from mitosheet.public.v3 import *
 
 from utils import get_automation_json, read_automation_from_file, write_automation_to_file
-from styles import button_style, disabled_button_style
+from styles import button_style, disabled_button_style, mito_theme
 
 dash.register_page(__name__)
 
@@ -29,12 +29,7 @@ layout = html.Div([
         Spreadsheet(
             id='input-data', 
             import_folder='./data',
-            theme={
-                "primaryColor": "#9D6CFF",
-                "backgroundColor": "#363636",
-                "secondaryBackgroundColor": "#494650",
-                "textColor": "#FFFFFF"
-            }),
+            theme=mito_theme),
         html.Button('Run Automation', id='run-automation', style=disabled_button_style),
         dcc.Download(id="download-dataframe-csv"),
     ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width

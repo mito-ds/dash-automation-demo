@@ -6,7 +6,7 @@ from dash import Input, Output, State, callback, dcc, html
 from mitosheet.mito_dash.v1 import Spreadsheet, mito_callback
 
 from utils import get_automation_json, get_file_name_from_automation_name, write_automation_to_file
-from styles import button_style, success_button_style, input_style, text_area_style
+from styles import button_style, success_button_style, input_style, text_area_style, mito_theme
 
 dash.register_page(__name__)
 
@@ -33,12 +33,7 @@ layout = html.Div([
                 'function_name': 'get_data',
                 'function_params': ['file_name_export_excel', 'file_name_import_csv']
             },
-            theme={
-                "primaryColor": "#9D6CFF",
-                "backgroundColor": "#363636",
-                "secondaryBackgroundColor": "#494650",
-                "textColor": "#FFFFFF"
-            }
+            theme=mito_theme
         ),
 
         # A button to finalize the automation
