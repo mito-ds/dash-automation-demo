@@ -1,5 +1,5 @@
 button_style={
-    'background-color': '#9d6cff',
+    'background-color': '#ff4b4b',
     'color': 'white',
     'width': '100%',
     'padding': '10px 15px',
@@ -11,8 +11,8 @@ button_style={
     'font-size': '16px'
 }
 
-success_button_style = {**button_style, 'background-color': '#287d2c'}
-disabled_button_style = {**button_style, 'background-color': '#494650'}
+success_button_style = {**button_style, 'background-color': '#ff4b4b'}
+disabled_button_style = {**button_style, 'background-color': '#ff4b4b80'}
 
 input_style = {
     'width': '100%', 
@@ -26,5 +26,6 @@ text_area_style = {**input_style, 'height': '100px'}
 
 mito_theme = {
     'backgroundColor': '#2d2d2d',
-    'textColor': 'white'
+    'primaryColor': '#ff4b4b',
+    'textColor': '#fafafa'
 }
