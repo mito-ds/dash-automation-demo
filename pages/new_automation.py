@@ -56,7 +56,7 @@ CLOSE_BRACKET = '}'
     State('automation-description', 'value'),
     State('hours-per-run', 'value'),
 )
-def create_automation(n_clicks, mito_return_value, automation_name, automation_description, hours_per_run):
+def create_automation(n_clicks, spreadsheet_result, automation_name, automation_description, hours_per_run):
     if n_clicks is None:
         return ''
     
@@ -69,15 +69,7 @@ def create_automation(n_clicks, mito_return_value, automation_name, automation_d
     if hours_per_run is None or hours_per_run == '':
         return 
     
-
-    analysis = get_automation_json(
-        automation_name,
-        automation_description,
-        hours_per_run,
-        mito_return_value.code(),
-    )
-
-    wrote = write_automation_to_file(automation_name, automation_description, hours_per_run, mito_return_value.code())
+    wrote = write_automation_to_file(automation_name, automation_description, hours_per_run, spreadsheet_result.analysis())
     if not wrote:
         return html.Div([f'An automation with the name {automation_name} already exists'], style={'color': 'red'})
 

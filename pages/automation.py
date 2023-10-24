@@ -8,7 +8,7 @@ import os
 from typing import Callable, Optional
 import dash
 from dash import html, callback, Input, Output, dcc, State
-from mitosheet.mito_dash.v1 import Spreadsheet, mito_callback
+from mitosheet.mito_dash.v1 import Spreadsheet, mito_callback, RunnableAnalysis
 import urllib.parse
 import pandas as pd
 import time
@@ -35,31 +35,6 @@ layout = html.Div([
     ], style={'max-width': '1200px', 'margin': 'auto', 'padding': '20px'})  # This style ensures the content is centered and has a max width
 ], style={'height': '100%', 'color': 'white'})
 
-
-
-def get_function_from_code_unsafe(code: str) -> Optional[Callable]:
-    """
-    Given a string of code, returns the first function defined in the code. Notably, to do
-    this, it executes the code, and then returns the first function defined in the code. 
-
-    As it executes the full code string, you should only use this function if you trust the
-    code string -- and in our case, if the function is not called.
-
-    If no functions are defined, returns None
-    """
-    functions_before = [f for f in locals().values() if callable(f)]
-    exec(code)
-    functions = [f for f in locals().values() if callable(f) and f not in functions_before]
-
-    # We then find the one function that was defined inside of this module -- as the above 
-    # exec likely defines all the other mitosheet functions (none of which we actaully want)
-    for f in functions:
-        if inspect.getmodule(f) == inspect.getmodule(get_function_from_code_unsafe):
-            return f
-        
-    raise ValueError(f'No functions defined in code: {code}')
-
-
 def get_automation_metadata(automation):
 
     num_runs = len(automation['runs'])
@@ -70,16 +45,6 @@ def get_automation_metadata(automation):
         html.Div("Description: " + automation['automation_description']),
         html.Div(f'This automation has been run {num_runs} times, and has saved {hours_saved} hours'),
     ])
-
-    # Then, from the code, we get the number of inputs and outputs 
-    # (we need a way to read it nicely from a file). It would be really useful to have some Mito interface functions for dealing with generated code...
-    code_string = automation['automation_code']
-    function = get_function_from_code_unsafe(code_string)
-
-    # Get the argument names from the function
-    argument_names = list(inspect.signature(function).parameters.keys()) if function is not None else []
-
-    # Tell them how many arguments there are
 
     # Then, allow users to configure two new dataframes
     return html.Div([
@@ -92,7 +57,7 @@ def get_automation_metadata(automation):
     Input('run-automation', 'n_clicks'), State('url', 'search'), 
     State('input-data', 'spreadsheet_result'), prevent_initial_call=True
 )
-def run_automation(n_clicks, search, return_value):
+def run_automation(n_clicks, search, spreadsheet_result):
     # Prase the search params
     # TODO: handle errors here - if it's not included
     search = urllib.parse.parse_qs(search[1:])
@@ -113,54 +78,43 @@ def run_automation(n_clicks, search, return_value):
             html.A('Go back to the main page', href='/')
         ])
    
-    
-    # Get the function
-    code_string = automation['automation_code']
-    function = get_function_from_code_unsafe(code_string)
 
-    # Get the argument names from the function
-    argument_names = list(inspect.signature(function).parameters.keys()) if function is not None else []
+    # Then, we use the analysis JSON to create a runnable analysis
+    # and we get the import parameters, and tell the user to configure them
+    runnable_analysis = RunnableAnalysis.from_json(automation['analysis_json'])
+    import_params = runnable_analysis.get_param_metadata('import')
+       
 
     # If there are the wrong number of arguments provided in the dfs, return an error
-    if len(argument_names) != len(return_value.dfs()):
+    if len(import_params) != len(spreadsheet_result.dfs()):
         return html.Div([
-            html.H3(f'Expected {len(argument_names)} arguments, but got {len(return_value.dfs())}. Please update the mitosheet above.'),
+            html.H3(f'Expected {len(import_params)} arguments, but got {len(spreadsheet_result.dfs())}.'),
         ])
 
-    if function:
-        file_names = []
-        # Make the file tmp/{automation_name}
-        os.makedirs(f'tmp/{automation_name}', exist_ok=True)
+    arguments = {param['name']: df for param, df in zip(import_params, spreadsheet_result.dfs())}    
+    result = runnable_analysis.run(*arguments)
 
-        for i, df in enumerate(return_value.dfs()):
-            # Write to a file
-            df.to_csv(f'tmp/{automation_name}/{i}.csv', index=False)
-            file_names.append(f'tmp/{automation_name}/{i}.csv')
+    write_automation_to_file(
+        automation['automation_name'],
+        automation['automation_description'],
+        automation['hours_per_run'],
+        runnable_analysis,
+        automation['runs'] + [time.time()],
+        overwrite=True
+    )
 
-        result = function(*file_names)
-
-        # Remove all file paths
-        for file_name in file_names:
-            os.remove(file_name)
-
-        write_automation_to_file(
-            automation['automation_name'],
-            automation['automation_description'],
-            automation['hours_per_run'],
-            automation['automation_code'],
-            automation['runs'] + [time.time()],
-            overwrite=True
-        )
-
+    if isinstance(result, pd.DataFrame):
+        df = result
+    else:
         df = result[-1]
 
-        return dcc.send_data_frame(df.to_csv, "mydf.csv")
+    return dcc.send_data_frame(df.to_csv, "mydf.csv")
 
 
 @mito_callback(
-        Output('automation-num-uploads', 'children'), 
-        Output('run-automation', 'style'),
-        Input('url', 'search'), Input('input-data', 'spreadsheet_result')
+    Output('automation-num-uploads', 'children'), 
+    Output('run-automation', 'style'),
+    Input('url', 'search'), Input('input-data', 'spreadsheet_result')
 )
 def display_number_of_uploads_remaining(search, spreadsheet_result):
     # Prase the search params
@@ -176,25 +130,41 @@ def display_number_of_uploads_remaining(search, spreadsheet_result):
     if automation is None:
         return ''
     
-    # Then, from the code, we get the number of inputs and outputs 
-    # (we need a way to read it nicely from a file). It would be really useful to have some Mito interface functions for dealing with generated code...
-    code_string = automation['automation_code']
-    function = get_function_from_code_unsafe(code_string)
+    # Then, we use the analysis JSON to create a runnable analysis
+    # and we get the import parameters, and tell the user to configure them
+    runnable_analysis = RunnableAnalysis.from_json(automation['analysis_json'])
+    import_params = runnable_analysis.get_param_metadata('import')
 
-    # Get the argument names from the function
-    argument_names = list(inspect.signature(function).parameters.keys()) if function is not None else []
+
+    # Then, build a helpful message for the user -- a list of the parameters, and their original values
+    argument_list = html.Ul([
+        html.Li([
+            html.Div(f'Parameter {index}: {param["name"]}={param["original_value"]}')
+        ]) for index, param in enumerate(import_params)
+    ])
     
     num_dfs = len(spreadsheet_result.dfs()) if spreadsheet_result is not None else 0
 
     # Return colored text based on the number of arguments
-    if num_dfs == len(argument_names):
-        return html.Div(f'You have uploaded {num_dfs} of {len(argument_names)} required arguments', style={'color': 'green'}), button_style
+    if num_dfs == len(import_params):
+        return html.Div([f'You have uploaded {num_dfs} of {len(import_params)} required arguments'], style={'color': 'green'}), button_style
     
-    if num_dfs > len(argument_names):
-        return html.Div(f'You have uploaded {num_dfs} of {len(argument_names)} required arguments', style={'color': 'red'}), disabled_button_style
+    if num_dfs > len(import_params):
+        return html.Div([
+                f'You have uploaded {num_dfs} of {len(import_params)} required arguments',
+                html.Div('You have uploaded too many arguments. Please delete some of them.', style={'color': 'red'}),
+                argument_list
+            ], 
+            style={'color': 'red'}
+        ), disabled_button_style
     
-    if num_dfs < len(argument_names):
-        return html.Div(f'You have uploaded {num_dfs} of {len(argument_names)} required arguments', style={'color': 'orange'}), disabled_button_style
+    if num_dfs < len(import_params):
+        return html.Div([
+                f'You have uploaded {num_dfs} of {len(import_params)} required arguments',
+                argument_list
+            ], 
+            style={'color': 'orange'}
+        ), disabled_button_style
 
 
 @callback(Output('automation-metadata', 'children'), Input('url', 'search'))
