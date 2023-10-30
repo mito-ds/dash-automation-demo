@@ -8,7 +8,6 @@ This demo application shows how Mito can be used to automate spreadsheet process
 
 First, install dependencies:
 ```
-python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ mitosheet --upgrade
 pip install -r requirements.txt
 ```
 
